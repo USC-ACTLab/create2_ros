@@ -5,6 +5,7 @@
 #include <create2_cpp/Create2.h>
 
 class Create2ROS
+  : public Create2
 {
 public:
   Create2ROS(
@@ -12,16 +13,31 @@ public:
     uint32_t brcPin,
     bool useBrcPin)
     : subscribeCmdVel_()
-    , create2_(port, brcPin, useBrcPin)
+    , Create2(port, brcPin, useBrcPin)
   {
     ros::NodeHandle n;
-    create2_.start();
-    create2_.safe();
+    start();
+    safe();
 
-    ROS_INFO("Battery: %.1f %%", create2_.batteryCharge() / (float)create2_.batteryCapacity() * 100.0f);
+    startStream({
+      Create2::SensorOIMode,
+      Create2::SensorVoltage,
+      Create2::SensorCurrent,
+      Create2::SensorTemperature,
+      Create2::SensorBatteryCharge,
+      Create2::SensorBatteryCapacity,
+      Create2::SensorCliffLeftSignal,
+      Create2::SensorCliffFrontLeftSignal,
+      Create2::SensorCliffFrontRightSignal,
+      Create2::SensorCliffRightSignal,
+      Create2::SensorLeftEncoderCounts,
+      Create2::SensorRightEncoderCounts,
+    });
+
+    // ROS_INFO("Battery: %.1f %%", create2_.batteryCharge() / (float)create2_.batteryCapacity() * 100.0f);
 
 
-    create2_.digitsLedsAscii("ABCD");
+    digitsLedsAscii("ABCD");
 
     subscribeCmdVel_ = n.subscribe("cmd_vel", 1, &Create2ROS::cmdVelChanged, this);
   }
@@ -29,18 +45,89 @@ public:
   ~Create2ROS()
   {
     std::cout << "destruct createROS" << std::endl;
-    create2_.power();
+    power();
   }
 
   void cmdVelChanged(
     const geometry_msgs::Twist::ConstPtr& msg)
   {
-    create2_.driveDirect(msg->linear.y * 1000, msg->linear.x * 1000);
+    driveDirect(msg->linear.y * 1000, msg->linear.x * 1000);
+  }
+
+  virtual void onMode(
+      Mode mode)
+  {
+    std::cout << "Mode: " << mode << std::endl;
+  }
+
+  virtual void onVoltage(
+      uint16_t voltage)
+  {
+    std::cout << "V: " << voltage << std::endl;
+  }
+
+  virtual void onCurrent(
+    int16_t currentInMA)
+  {
+    std::cout << "Current: " << currentInMA << " mA" << std::endl;
+  }
+
+  virtual void onTemperature(
+    int8_t temperatureInDegCelcius)
+  {
+    std::cout << "Temp: " << (int)temperatureInDegCelcius << " degC" << std::endl;
+  }
+
+  virtual void onBatteryCharge(
+    uint16_t chargeInMAH)
+  {
+    std::cout << "Charge: " << chargeInMAH << " mAh" << std::endl;
+  }
+
+  virtual void onBatteryCapacity(
+    uint16_t capacityInMAH)
+  {
+    std::cout << "Capacity: " << capacityInMAH << " mAh" << std::endl;
+  }
+
+  virtual void onCliffLeft(
+    uint16_t signalStrength)
+  {
+    std::cout << "CliffLeft: " << signalStrength << std::endl;
+  }
+
+  virtual void onCliffFrontLeft(
+    uint16_t signalStrength)
+  {
+    std::cout << "CliffLeft: " << signalStrength << std::endl;
+  }
+
+  virtual void onCliffFrontRight(
+    uint16_t signalStrength)
+  {
+    std::cout << "CliffLeft: " << signalStrength << std::endl;
+  }
+
+  virtual void onCliffRight(
+    uint16_t signalStrength)
+  {
+    std::cout << "CliffLeft: " << signalStrength << std::endl;
+  }
+
+  virtual void onLeftEncoderCounts(
+    int16_t count)
+  {
+    std::cout << "LeftEncoder: " << count << std::endl;
+  }
+
+  virtual void onRightEncoderCounts(
+    int16_t count)
+  {
+    std::cout << "RightEncoder: " << count << std::endl;
   }
 
 private:
   ros::Subscriber subscribeCmdVel_;
-  Create2 create2_;
 };
 
 
@@ -75,7 +162,15 @@ int main(int argc, char **argv)
 
   g_create2 = new Create2ROS(port, brcPin, useBrcPin);
 
-  ros::spin();
+  ros::Rate loop_rate(10);
+  while (ros::ok())
+  {
+
+    g_create2->update();
+
+    ros::spinOnce();
+    loop_rate.sleep();
+  }
 
   return 0;
 }

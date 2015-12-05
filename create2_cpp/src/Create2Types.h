@@ -1,12 +1,5 @@
 #pragma once
 
-enum Mode {
-  ModeOff       = 0,
-  ModePassive   = 1,
-  ModeSafe      = 2,
-  ModeFull      = 3,
-};
-
 enum Op {
   OpStart             = 128,
   OpReset             =   7,
@@ -50,40 +43,4 @@ enum ChargingState {
   ChargingFaultCondition = 5,
 };
 
-enum PacketID {
-  SensorButtons                     = 18,
-  SensorDistance                    = 19, //broken on firmware < 3.3.0
-  SensorAngle                       = 20, //broken on firmware < 3.4.0
-  SensorChargingState               = 21, // one of ChargingState
-  SensorVoltage                     = 22, //mV
-  SensorCurrent                     = 23, //mA
-  SensorTemperature                 = 24, //degC
-  SensorBatteryCharge               = 25, //mAh
-  SensorBatteryCapacity             = 26,
-  SensorCliffLeftSignal             = 28,
-  SensorCliffFrontLeftSignal        = 29,
-  SensorCliffFrontRightSignal       = 30,
-  SensorCliffRightSignal            = 31,
-  SensorChargingSourcesAvailable    = 34,
-  SensorOIMode                      = 35, // one of Mode
-  SensorSongPlaying                 = 37,
-  SensorNumberOfStreamPackets       = 38,
-  SensorRequestedVelocity           = 39,
-  SensorRequestedRadius             = 40,
-  SensorRequestedRightVelocity      = 41,
-  SensorRequestedLeftVelocity       = 42,
-  SensorLeftEncoderCounts           = 43,
-  SensorRightEncoderCounts          = 44,
-  SensorRightBumper                 = 45,
-  SensorLightBumpLeftSignal         = 46,
-  SensorLightBumpFrontLeftSignal    = 47,
-  SensorLightBumpCenterLeftSignal   = 48,
-  SensorLightBumpCenterRightSignal  = 49,
-  SensorLightBumpFrontRightSignal   = 50,
-  SensorLightBumpRightSignal        = 51,
-  SensorLeftMotorCurrent            = 54, //mA
-  SensorRightMotorCurrent           = 55, //mA
-  SensorMainBrushMotorCurrent       = 56, //mA
-  SensorSideBrushMotorCurrent       = 57, //mA
-  SensorStatis                      = 58,
-};
+

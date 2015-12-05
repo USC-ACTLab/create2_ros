@@ -5,6 +5,52 @@ class Create2Impl;
 class Create2
 {
 public:
+  enum SensorID {
+    SensorButtons                     = 18,
+    SensorDistance                    = 19, //broken on firmware < 3.3.0
+    SensorAngle                       = 20, //broken on firmware < 3.4.0
+    SensorChargingState               = 21, // one of ChargingState
+    SensorVoltage                     = 22, //mV
+    SensorCurrent                     = 23, //mA
+    SensorTemperature                 = 24, //degC
+    SensorBatteryCharge               = 25, //mAh
+    SensorBatteryCapacity             = 26,
+    SensorCliffLeftSignal             = 28,
+    SensorCliffFrontLeftSignal        = 29,
+    SensorCliffFrontRightSignal       = 30,
+    SensorCliffRightSignal            = 31,
+    SensorChargingSourcesAvailable    = 34,
+    SensorOIMode                      = 35, // one of Mode
+    SensorSongPlaying                 = 37,
+    SensorNumberOfStreamPackets       = 38,
+    SensorRequestedVelocity           = 39,
+    SensorRequestedRadius             = 40,
+    SensorRequestedRightVelocity      = 41,
+    SensorRequestedLeftVelocity       = 42,
+    SensorLeftEncoderCounts           = 43,
+    SensorRightEncoderCounts          = 44,
+    SensorRightBumper                 = 45,
+    SensorLightBumpLeftSignal         = 46,
+    SensorLightBumpFrontLeftSignal    = 47,
+    SensorLightBumpCenterLeftSignal   = 48,
+    SensorLightBumpCenterRightSignal  = 49,
+    SensorLightBumpFrontRightSignal   = 50,
+    SensorLightBumpRightSignal        = 51,
+    SensorLeftMotorCurrent            = 54, //mA
+    SensorRightMotorCurrent           = 55, //mA
+    SensorMainBrushMotorCurrent       = 56, //mA
+    SensorSideBrushMotorCurrent       = 57, //mA
+    SensorStatus                      = 58,
+  };
+
+  enum Mode {
+    ModeOff       = 0,
+    ModePassive   = 1,
+    ModeSafe      = 2,
+    ModeFull      = 3,
+  };
+
+public:
     Create2(
       const std::string& port,
       uint32_t brcPin,
@@ -31,19 +77,84 @@ public:
     void digitsLedsAscii(
       const char data[4]);
 
-    int8_t temperature();
+    void startStream(
+      std::vector<SensorID> ids);
 
-    int16_t leftEncoderCounts();
+    void update();
 
-    int16_t rightEncoderCounts();
+    virtual void onMode(
+      Mode mode)
+    {
+    }
 
-    uint16_t batteryCharge();
+    virtual void onVoltage(
+      uint16_t voltageInMV)
+    {
+    }
 
-    uint16_t batteryCapacity();
+    virtual void onCurrent(
+      int16_t currentInMA)
+    {
+    }
 
-    uint16_t voltage();
+    virtual void onTemperature(
+      int8_t temperatureInDegCelcius)
+    {
+    }
 
-    int16_t current();
+    virtual void onBatteryCharge(
+      uint16_t chargeInMAH)
+    {
+    }
+
+    virtual void onBatteryCapacity(
+      uint16_t capacityInMAH)
+    {
+    }
+
+    virtual void onCliffLeft(
+      uint16_t signalStrength)
+    {
+    }
+
+    virtual void onCliffFrontLeft(
+      uint16_t signalStrength)
+    {
+    }
+
+    virtual void onCliffFrontRight(
+      uint16_t signalStrength)
+    {
+    }
+
+    virtual void onCliffRight(
+      uint16_t signalStrength)
+    {
+    }
+
+    virtual void onLeftEncoderCounts(
+      int16_t count)
+    {
+    }
+
+    virtual void onRightEncoderCounts(
+      int16_t count)
+    {
+    }
+
+    // int8_t temperature();
+
+    // int16_t leftEncoderCounts();
+
+    // int16_t rightEncoderCounts();
+
+    // uint16_t batteryCharge();
+
+    // uint16_t batteryCapacity();
+
+    // uint16_t voltage();
+
+    // int16_t current();
 
 private:
   Create2Impl* impl_;

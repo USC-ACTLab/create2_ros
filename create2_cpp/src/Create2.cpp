@@ -23,7 +23,7 @@ public:
       : serial_(port, 115200, serial::Timeout::simpleTimeout(1000))
       , brcPin_(brcPin)
       , useBrcPin_(useBrcPin)
-      , mode_(ModeOff)
+      , mode_(Create2::ModeOff)
   {
     if (useBrcPin_)
     {
@@ -65,7 +65,7 @@ public:
       }
     }
 
-  void sensors(PacketID p)
+  void sensors(Create2::SensorID p)
   {
     uint8_t data = (uint8_t)p;
     send(OpSensors, &data, 1);
@@ -124,7 +124,8 @@ public:
   serial::Serial serial_;
   uint32_t brcPin_;
   bool useBrcPin_;
-  Mode mode_;
+  Create2::Mode mode_;
+  std::vector<uint8_t> readBuffer_;
 };
 
 /////////////////////////////////////////////////////////
@@ -213,44 +214,187 @@ void Create2::digitsLedsAscii(
   impl_->send(OpDigitsLedsAscii, (const uint8_t*)data, 4);
 }
 
-int8_t Create2::temperature()
+void Create2::startStream(
+  std::vector<SensorID> ids)
 {
-  impl_->sensors(SensorTemperature);
-  return impl_->readInt8();
+  std::vector<uint8_t> data;
+  data.push_back((uint8_t)ids.size());
+  data.insert(data.end(), ids.begin(), ids.end());
+  impl_->send(OpStream, &data[0], data.size());
 }
 
-int16_t Create2::leftEncoderCounts()
+void Create2::update()
 {
-  impl_->sensors(SensorLeftEncoderCounts);
-  return impl_->readInt16();
+  impl_->serial_.read(impl_->readBuffer_, impl_->serial_.available());
+
+  for (size_t i = 0; i + 1 < impl_->readBuffer_.size(); ++i) {
+    if (impl_->readBuffer_[i] == 19) {
+      uint8_t size = impl_->readBuffer_[i+1];
+      if (impl_->readBuffer_.size() > size + i + 2) {
+        // check checksum
+        uint32_t sum = 0;
+        for (size_t j = i; j <= size + i + 2; ++j) {
+          sum += impl_->readBuffer_[j];
+          std::cout << (int)impl_->readBuffer_[j] << " ";
+        }
+
+        if ((sum & 0xFF) == 0) {
+          // parse packet
+          size_t pos = i + 2;
+          while (pos < i + size + 2) {
+            SensorID id = (SensorID)impl_->readBuffer_[pos];
+            ++pos;
+            switch(id) {
+            case SensorOIMode:
+              {
+                Mode mode = (Mode)impl_->readBuffer_[pos];
+                onMode(mode);
+                pos += 1;
+                break;
+              }
+            case SensorVoltage:
+              {
+                big_uint16_t result;
+                memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
+                onVoltage(result);
+                pos += 2;
+                break;
+              }
+            case SensorCurrent:
+              {
+                big_int16_t result;
+                memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_int16_t));
+                onCurrent(result);
+                pos += 2;
+                break;
+              }
+            case SensorTemperature:
+              {
+                uint8_t result;
+                memcpy(&result, &impl_->readBuffer_[pos], sizeof(uint8_t));
+                onTemperature(result);
+                pos += 1;
+                break;
+              }
+            case SensorBatteryCharge:
+              {
+                big_uint16_t result;
+                memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
+                onBatteryCharge(result);
+                pos += 2;
+                break;
+              }
+            case SensorBatteryCapacity:
+              {
+                big_uint16_t result;
+                memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
+                onBatteryCapacity(result);
+                pos += 2;
+                break;
+              }
+            case SensorCliffLeftSignal:
+              {
+                big_uint16_t result;
+                memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
+                onCliffLeft(result);
+                pos += 2;
+                break;
+              }
+            case SensorCliffFrontLeftSignal:
+              {
+                big_uint16_t result;
+                memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
+                onCliffFrontLeft(result);
+                pos += 2;
+                break;
+              }
+            case SensorCliffFrontRightSignal:
+              {
+                big_uint16_t result;
+                memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
+                onCliffFrontRight(result);
+                pos += 2;
+                break;
+              }
+            case SensorCliffRightSignal:
+              {
+                big_uint16_t result;
+                memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
+                onCliffRight(result);
+                pos += 2;
+                break;
+              }
+            case SensorLeftEncoderCounts:
+              {
+                big_int16_t result;
+                memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_int16_t));
+                onLeftEncoderCounts(result);
+                pos += 2;
+                break;
+              }
+            case SensorRightEncoderCounts:
+              {
+                big_int16_t result;
+                memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_int16_t));
+                onRightEncoderCounts(result);
+                pos += 2;
+                break;
+              }
+            }
+
+          }
+        } else {
+          std::cout << "checksum incorrect!" << sum << std::endl;
+        }
+
+        // delete portion of buffer
+        impl_->readBuffer_.erase(impl_->readBuffer_.begin(), impl_->readBuffer_.begin() + size + i);
+      }
+    }
+  }
+
 }
 
-int16_t Create2::rightEncoderCounts()
-{
-  impl_->sensors(SensorRightEncoderCounts);
-  return impl_->readInt16();
-}
 
-uint16_t Create2::batteryCharge()
-{
-  impl_->sensors(SensorBatteryCharge);
-  return impl_->readUint16();
-}
 
-uint16_t Create2::batteryCapacity()
-{
-  impl_->sensors(SensorBatteryCapacity);
-  return impl_->readUint16();
-}
+// int8_t Create2::temperature()
+// {
+//   impl_->sensors(SensorTemperature);
+//   return impl_->readInt8();
+// }
 
-uint16_t Create2::voltage()
-{
-  impl_->sensors(SensorVoltage);
-  return impl_->readUint16();
-}
+// int16_t Create2::leftEncoderCounts()
+// {
+//   impl_->sensors(SensorLeftEncoderCounts);
+//   return impl_->readInt16();
+// }
 
-int16_t Create2::current()
-{
-  impl_->sensors(SensorCurrent);
-  return impl_->readInt16();
-}
+// int16_t Create2::rightEncoderCounts()
+// {
+//   impl_->sensors(SensorRightEncoderCounts);
+//   return impl_->readInt16();
+// }
+
+// uint16_t Create2::batteryCharge()
+// {
+//   impl_->sensors(SensorBatteryCharge);
+//   return impl_->readUint16();
+// }
+
+// uint16_t Create2::batteryCapacity()
+// {
+//   impl_->sensors(SensorBatteryCapacity);
+//   return impl_->readUint16();
+// }
+
+// uint16_t Create2::voltage()
+// {
+//   impl_->sensors(SensorVoltage);
+//   return impl_->readUint16();
+// }
+
+// int16_t Create2::current()
+// {
+//   impl_->sensors(SensorCurrent);
+//   return impl_->readInt16();
+// }
