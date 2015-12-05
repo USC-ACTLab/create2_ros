@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="port" default="/dev/ttyUSB0" />
+
+  <node name="driver" pkg="create2_driver" type="create2_driver_node" output="screen">
+    <param name="port" value="$(arg port)" />
+  </node>
+
+<!--   <node name="test" pkg="create2_driver" type="test_node" output="screen">
+  </node> -->
+</launch>
