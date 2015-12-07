@@ -1,6 +1,9 @@
-#include <ros/ros.h>
 #include <signal.h>
-#include "geometry_msgs/Twist.h"
+
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
+#include <tf/transform_broadcaster.h>
+#include <nav_msgs/Odometry.h>
 
 #include <create2_cpp/Create2.h>
 
@@ -12,8 +15,16 @@ public:
     const std::string& port,
     uint32_t brcPin,
     bool useBrcPin)
-    : subscribeCmdVel_()
-    , Create2(port, brcPin, useBrcPin)
+    : Create2(port, brcPin, useBrcPin)
+    , subscribeCmdVel_()
+    , br_()
+    , odomPub_()
+    , hasPreviousCounts_(false)
+    , previousLeftEncoderCount_(0)
+    , previousRightEncoderCount_(0)
+    , x_(0)
+    , y_(0)
+    , theta_(0)
   {
     ros::NodeHandle n;
     start();
@@ -40,12 +51,13 @@ public:
     digitsLedsAscii("ABCD");
 
     subscribeCmdVel_ = n.subscribe("cmd_vel", 1, &Create2ROS::cmdVelChanged, this);
+    odomPub_ = n.advertise<nav_msgs::Odometry>("odom", 50);
   }
 
   ~Create2ROS()
   {
     std::cout << "destruct createROS" << std::endl;
-    power();
+    // power();
   }
 
   void cmdVelChanged(
@@ -57,6 +69,14 @@ public:
   virtual void onUpdate(
     const State& state)
   {
+    static ros::Time lastTime = ros::Time::now();
+
+    ros::Time currentTime = ros::Time::now();
+    double dt = (currentTime - lastTime).toSec();
+    double lastX = x_;
+    double lastY = y_;
+    double lastTheta = theta_;
+
     std::cout << "Mode: " << state.mode << std::endl;
     std::cout << "V: " << state.voltageInMV << " mV" << std::endl;
     std::cout << "Current: " << state.currentInMA << " mA" << std::endl;
@@ -70,10 +90,93 @@ public:
     std::cout << "LeftEncoder: " << state.leftEncoderCounts << std::endl;
     std::cout << "RightEncoder: " << state.rightEncoderCounts << std::endl;
 
+    if (hasPreviousCounts_)
+    {
+      int32_t dtl = state.leftEncoderCounts - previousLeftEncoderCount_;
+      int32_t dtr = state.rightEncoderCounts - previousRightEncoderCount_;
+
+      std::cout << "dtl: " << dtl << " dtr: " << dtr << std::endl;
+
+      if (dtl < -30000) {
+        dtl += 65535;
+      }
+      if (dtl > 30000) {
+        dtl -= 65535;
+      }
+      if (dtr < -30000) {
+        dtr += 65535;
+      }
+      if (dtr > 30000) {
+        dtr -= 65535;
+      }
+
+      double Dl = M_PI * WheelDiameterInMM * dtl / CountsPerRev;
+      double Dr = M_PI * WheelDiameterInMM * dtr / CountsPerRev;
+      double Dc = (Dl + Dr) / 2.0;
+
+      std::cout << "Dl: " << Dl << " Dr: " << Dr << " Dc: " << Dc << std::endl;
+
+      x_ += Dc * cos(theta_) / 1000.0;
+      y_ += Dc * sin(theta_) / 1000.0;
+      theta_ = fmod(theta_ + (Dr - Dl) / WheelDistanceInMM, 2 * M_PI);
+      if (theta_ < 0) {
+        theta_ += 2 * M_PI;
+      }
+
+    }
+
+    previousLeftEncoderCount_ = state.leftEncoderCounts;
+    previousRightEncoderCount_ = state.rightEncoderCounts;
+    hasPreviousCounts_ = true;
+
+    std::cout << "State: (" << x_ << ", " << y_ << ", " << theta_ << ")" << std::endl;
+
+    // send tf
+    tf::Transform transform;
+    transform.setOrigin( tf::Vector3(x_, y_, 0.0) );
+    tf::Quaternion q;
+    q.setRPY(0, 0, theta_);
+    transform.setRotation(q);
+    br_.sendTransform(tf::StampedTransform(transform, currentTime, "odom", "base_link"));
+
+    // publish odomotry message
+    geometry_msgs::Quaternion odomQuat = tf::createQuaternionMsgFromYaw(theta_);
+
+    nav_msgs::Odometry odom;
+    odom.header.stamp = currentTime;
+    odom.header.frame_id = "odom";
+
+    //set the position
+    odom.pose.pose.position.x = x_;
+    odom.pose.pose.position.y = y_;
+    odom.pose.pose.position.z = 0.0;
+    odom.pose.pose.orientation = odomQuat;
+
+    //set the velocity
+    odom.child_frame_id = "base_link";
+    odom.twist.twist.linear.x = dt > 0 ? (x_ - lastX)/dt : 0.0;
+    odom.twist.twist.linear.y = dt > 0 ? (y_ - lastY)/dt : 0.0;
+    odom.twist.twist.angular.z = dt > 0 ? atan2(sin(theta_ - lastTheta), cos(theta_ - lastTheta))/dt : 0.0;
+
+    //publish the message
+    odomPub_.publish(odom);
+
+    lastTime = currentTime;
+
   }
 
 private:
   ros::Subscriber subscribeCmdVel_;
+  tf::TransformBroadcaster br_;
+  ros::Publisher odomPub_;
+
+  bool hasPreviousCounts_;
+  int16_t previousLeftEncoderCount_;
+  int16_t previousRightEncoderCount_;
+
+  double x_;
+  double y_;
+  double theta_;
 };
 
 

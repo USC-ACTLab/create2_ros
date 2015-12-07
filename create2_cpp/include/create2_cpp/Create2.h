@@ -65,6 +65,10 @@ public:
     int16_t rightEncoderCounts;
   };
 
+  const double CountsPerRev = 508.8;
+  const double WheelDiameterInMM = 72.0;
+  const double WheelDistanceInMM = 235.0;
+
 public:
     Create2(
       const std::string& port,

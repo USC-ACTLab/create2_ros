@@ -341,10 +341,8 @@ void Create2::update()
                 break;
               }
             }
-
-            onUpdate(state);
-
           }
+          onUpdate(state);
         } else {
           std::cout << "checksum incorrect!" << sum << std::endl;
         }

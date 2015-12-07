@@ -9,6 +9,8 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   create2_cpp
+  tf
+  nav_msgs
 )
 
 # System dependencies are found with CMake's conventions

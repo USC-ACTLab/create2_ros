@@ -7,6 +7,11 @@
     <param name="port" value="$(arg port)" />
   </node>
 
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find create2_driver)/launch/rviz.rviz" required="true" />
+
+  <include file="$(find create2_driver)/launch/teleop_ps3.launch">
+  </include>
+
 <!--   <node name="test" pkg="create2_driver" type="test_node" output="screen">
   </node> -->
 </launch>
