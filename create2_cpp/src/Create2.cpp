@@ -240,6 +240,7 @@ void Create2::update()
 
         if ((sum & 0xFF) == 0) {
           // parse packet
+          State state;
           size_t pos = i + 2;
           while (pos < i + size + 2) {
             SensorID id = (SensorID)impl_->readBuffer_[pos];
@@ -247,8 +248,7 @@ void Create2::update()
             switch(id) {
             case SensorOIMode:
               {
-                Mode mode = (Mode)impl_->readBuffer_[pos];
-                onMode(mode);
+                state.mode = (Mode)impl_->readBuffer_[pos];
                 pos += 1;
                 break;
               }
@@ -256,7 +256,7 @@ void Create2::update()
               {
                 big_uint16_t result;
                 memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
-                onVoltage(result);
+                state.voltageInMV = result;
                 pos += 2;
                 break;
               }
@@ -264,7 +264,7 @@ void Create2::update()
               {
                 big_int16_t result;
                 memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_int16_t));
-                onCurrent(result);
+                state.currentInMA = result;
                 pos += 2;
                 break;
               }
@@ -272,7 +272,7 @@ void Create2::update()
               {
                 uint8_t result;
                 memcpy(&result, &impl_->readBuffer_[pos], sizeof(uint8_t));
-                onTemperature(result);
+                state.temperatureInDegCelcius = result;
                 pos += 1;
                 break;
               }
@@ -280,7 +280,7 @@ void Create2::update()
               {
                 big_uint16_t result;
                 memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
-                onBatteryCharge(result);
+                state.batteryChargeInMAH = result;
                 pos += 2;
                 break;
               }
@@ -288,7 +288,7 @@ void Create2::update()
               {
                 big_uint16_t result;
                 memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
-                onBatteryCapacity(result);
+                state.batteryCapacityInMAH = result;
                 pos += 2;
                 break;
               }
@@ -296,7 +296,7 @@ void Create2::update()
               {
                 big_uint16_t result;
                 memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
-                onCliffLeft(result);
+                state.cliffLeftSignalStrength = result;
                 pos += 2;
                 break;
               }
@@ -304,7 +304,7 @@ void Create2::update()
               {
                 big_uint16_t result;
                 memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
-                onCliffFrontLeft(result);
+                state.cliffFrontLeftSignalStrength = result;
                 pos += 2;
                 break;
               }
@@ -312,7 +312,7 @@ void Create2::update()
               {
                 big_uint16_t result;
                 memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
-                onCliffFrontRight(result);
+                state.cliffFrontRightSignalStrength = result;
                 pos += 2;
                 break;
               }
@@ -320,7 +320,7 @@ void Create2::update()
               {
                 big_uint16_t result;
                 memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_uint16_t));
-                onCliffRight(result);
+                state.cliffRightSignalStrength = result;
                 pos += 2;
                 break;
               }
@@ -328,7 +328,7 @@ void Create2::update()
               {
                 big_int16_t result;
                 memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_int16_t));
-                onLeftEncoderCounts(result);
+                state.leftEncoderCounts = result;
                 pos += 2;
                 break;
               }
@@ -336,11 +336,13 @@ void Create2::update()
               {
                 big_int16_t result;
                 memcpy(&result, &impl_->readBuffer_[pos], sizeof(big_int16_t));
-                onRightEncoderCounts(result);
+                state.rightEncoderCounts = result;
                 pos += 2;
                 break;
               }
             }
+
+            onUpdate(state);
 
           }
         } else {

@@ -50,6 +50,21 @@ public:
     ModeFull      = 3,
   };
 
+  struct State {
+    Mode mode;
+    uint16_t voltageInMV;
+    int16_t currentInMA;
+    int8_t temperatureInDegCelcius;
+    uint16_t batteryChargeInMAH;
+    uint16_t batteryCapacityInMAH;
+    uint16_t cliffLeftSignalStrength;
+    uint16_t cliffFrontLeftSignalStrength;
+    uint16_t cliffFrontRightSignalStrength;
+    uint16_t cliffRightSignalStrength;
+    int16_t leftEncoderCounts;
+    int16_t rightEncoderCounts;
+  };
+
 public:
     Create2(
       const std::string& port,
@@ -82,63 +97,8 @@ public:
 
     void update();
 
-    virtual void onMode(
-      Mode mode)
-    {
-    }
-
-    virtual void onVoltage(
-      uint16_t voltageInMV)
-    {
-    }
-
-    virtual void onCurrent(
-      int16_t currentInMA)
-    {
-    }
-
-    virtual void onTemperature(
-      int8_t temperatureInDegCelcius)
-    {
-    }
-
-    virtual void onBatteryCharge(
-      uint16_t chargeInMAH)
-    {
-    }
-
-    virtual void onBatteryCapacity(
-      uint16_t capacityInMAH)
-    {
-    }
-
-    virtual void onCliffLeft(
-      uint16_t signalStrength)
-    {
-    }
-
-    virtual void onCliffFrontLeft(
-      uint16_t signalStrength)
-    {
-    }
-
-    virtual void onCliffFrontRight(
-      uint16_t signalStrength)
-    {
-    }
-
-    virtual void onCliffRight(
-      uint16_t signalStrength)
-    {
-    }
-
-    virtual void onLeftEncoderCounts(
-      int16_t count)
-    {
-    }
-
-    virtual void onRightEncoderCounts(
-      int16_t count)
+    virtual void onUpdate(
+      const State& state)
     {
     }
 

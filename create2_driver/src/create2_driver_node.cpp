@@ -54,76 +54,22 @@ public:
     driveDirect(msg->linear.y * 1000, msg->linear.x * 1000);
   }
 
-  virtual void onMode(
-      Mode mode)
+  virtual void onUpdate(
+    const State& state)
   {
-    std::cout << "Mode: " << mode << std::endl;
-  }
+    std::cout << "Mode: " << state.mode << std::endl;
+    std::cout << "V: " << state.voltageInMV << " mV" << std::endl;
+    std::cout << "Current: " << state.currentInMA << " mA" << std::endl;
+    std::cout << "Temp: " << (int)state.temperatureInDegCelcius << " degC" << std::endl;
+    std::cout << "Charge: " << state.batteryChargeInMAH << " mAh" << std::endl;
+    std::cout << "Capacity: " << state.batteryCapacityInMAH << " mAh" << std::endl;
+    std::cout << "CliffLeft: " << state.cliffLeftSignalStrength << std::endl;
+    std::cout << "CliffFrontLeft: " << state.cliffFrontLeftSignalStrength << std::endl;
+    std::cout << "CliffFrontRight: " << state.cliffFrontRightSignalStrength << std::endl;
+    std::cout << "CliffRight: " << state.cliffRightSignalStrength << std::endl;
+    std::cout << "LeftEncoder: " << state.leftEncoderCounts << std::endl;
+    std::cout << "RightEncoder: " << state.rightEncoderCounts << std::endl;
 
-  virtual void onVoltage(
-      uint16_t voltage)
-  {
-    std::cout << "V: " << voltage << std::endl;
-  }
-
-  virtual void onCurrent(
-    int16_t currentInMA)
-  {
-    std::cout << "Current: " << currentInMA << " mA" << std::endl;
-  }
-
-  virtual void onTemperature(
-    int8_t temperatureInDegCelcius)
-  {
-    std::cout << "Temp: " << (int)temperatureInDegCelcius << " degC" << std::endl;
-  }
-
-  virtual void onBatteryCharge(
-    uint16_t chargeInMAH)
-  {
-    std::cout << "Charge: " << chargeInMAH << " mAh" << std::endl;
-  }
-
-  virtual void onBatteryCapacity(
-    uint16_t capacityInMAH)
-  {
-    std::cout << "Capacity: " << capacityInMAH << " mAh" << std::endl;
-  }
-
-  virtual void onCliffLeft(
-    uint16_t signalStrength)
-  {
-    std::cout << "CliffLeft: " << signalStrength << std::endl;
-  }
-
-  virtual void onCliffFrontLeft(
-    uint16_t signalStrength)
-  {
-    std::cout << "CliffLeft: " << signalStrength << std::endl;
-  }
-
-  virtual void onCliffFrontRight(
-    uint16_t signalStrength)
-  {
-    std::cout << "CliffLeft: " << signalStrength << std::endl;
-  }
-
-  virtual void onCliffRight(
-    uint16_t signalStrength)
-  {
-    std::cout << "CliffLeft: " << signalStrength << std::endl;
-  }
-
-  virtual void onLeftEncoderCounts(
-    int16_t count)
-  {
-    std::cout << "LeftEncoder: " << count << std::endl;
-  }
-
-  virtual void onRightEncoderCounts(
-    int16_t count)
-  {
-    std::cout << "RightEncoder: " << count << std::endl;
   }
 
 private:
