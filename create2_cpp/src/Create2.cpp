@@ -20,7 +20,7 @@ public:
       const std::string& port,
       const uint32_t brcPin,
       bool useBrcPin)
-      : serial_(port, 115200, serial::Timeout::simpleTimeout(1000))
+      : serial_(port, 115200, serial::Timeout::simpleTimeout(100))
       , brcPin_(brcPin)
       , useBrcPin_(useBrcPin)
       , mode_(Create2::ModeOff)
@@ -31,39 +31,52 @@ public:
 
       // enable GPIO
       std::ofstream gpioExport("/sys/class/gpio/export");
-      gpioExport << brcPin_ << std::flush;
+      if (gpioExport.good())
+      {
+        gpioExport << brcPin_ << std::flush;
 
-      // enable GPIO as output
-      std::stringstream sstr;
-      sstr << "/sys/class/gpio/gpio" << brcPin_ << "/direction";
-      std::ofstream gpioDirection(sstr.str());
-      gpioDirection << "high" << std::flush;
+        // enable GPIO as output
+        std::stringstream sstr;
+        sstr << "/sys/class/gpio/gpio" << brcPin_ << "/direction";
+        std::ofstream gpioDirection;
+        do {
+          gpioDirection.open(sstr.str());
+          if (gpioDirection.good()) {
+            gpioDirection << "high" << std::flush;
+            break;
+          }
+          std::this_thread::sleep_for(std::chrono::milliseconds(500));
+          std::cout << "waiting for " << sstr.str() << std::endl;
+        } while(true);
 
-      // pulse GPIO
-      sstr.clear();
-      sstr.str(std::string());
-      sstr << "/sys/class/gpio/gpio" << brcPin_ << "/value";
-      std::cout << sstr.str() << std::endl;
-      std::ofstream gpioValue(sstr.str());
-      // gpioValue << 1 << std::flush;
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
-      gpioValue << 0 << std::flush;
-      std::this_thread::sleep_for(std::chrono::milliseconds(500));
-      gpioValue << 1 << std::flush;
+
+        // pulse GPIO
+        sstr.clear();
+        sstr.str(std::string());
+        sstr << "/sys/class/gpio/gpio" << brcPin_ << "/value";
+        std::cout << sstr.str() << std::endl;
+        std::ofstream gpioValue(sstr.str());
+        std::cout << gpioValue.good() << std::endl;
+        // gpioValue << 1 << std::flush;
+        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        gpioValue << 0 << std::flush;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        gpioValue << 1 << std::flush;
+      }
     }
   }
 
-    ~Create2Impl()
-    {
-      std::cout << "destruct createImpl" << std::endl;
+  ~Create2Impl()
+  {
+    std::cout << "destruct createImpl" << std::endl;
 
-      if (useBrcPin_)
-      {
-        // disable GPIO
-        std::ofstream gpioExport("/sys/class/gpio/unexport");
-        gpioExport << brcPin_ << std::flush;
-      }
+    if (useBrcPin_)
+    {
+      // disable GPIO
+      std::ofstream gpioExport("/sys/class/gpio/unexport");
+      gpioExport << brcPin_ << std::flush;
     }
+  }
 
   void sensors(Create2::SensorID p)
   {
@@ -141,7 +154,8 @@ Create2::Create2(
 
 Create2::~Create2()
 {
-  stop();
+  // stop();
+  power();
   delete impl_;
 }
 

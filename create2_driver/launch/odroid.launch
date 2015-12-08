@@ -5,6 +5,12 @@
 
   <node name="driver" pkg="create2_driver" type="create2_driver_node" output="screen">
     <param name="port" value="$(arg port)" />
+    <param name="brcPin" value="87" />
+    <param name="useBrcPin" value="true" />
+  </node>
+
+  <node name="controller" pkg="create2_controller" type="create2_controller_node" output="screen">
+    <param name="frame" value="base_link" />
   </node>
 
 <!--   <node name="test" pkg="create2_driver" type="test_node" output="screen">

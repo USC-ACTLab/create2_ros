@@ -76,19 +76,19 @@ private:
             dist = 0;
         }
 
-        double v_left  = -relAngle * 0.5 + 20.0 * std::min(dist, 0.1) / (fabs(relAngle) + 1);
-        double v_right =  relAngle * 0.5 + 20.0 * std::min(dist, 0.1) / (fabs(relAngle) + 1);
+        double v_left  = -relAngle * 2.0 + 20.0 * std::min(dist, 0.1) / (fabs(relAngle) + 1);
+        double v_right =  relAngle * 2.0 + 20.0 * std::min(dist, 0.1) / (fabs(relAngle) + 1);
 
         ros::Duration timeToGo = m_goal.arrival - ros::Time::now();
-        double v_desired = 0.2;//dist / timeToGo.toSec();
+        double v_desired = 0.1;//dist / timeToGo.toSec();
 
-        double v_avg = (v_left + v_right) / 2.0;
-        if (v_avg > 0.01) {
+        double v_avg = (fabs(v_left) + fabs(v_right)) / 2.0;
+        if (v_avg > 0.05) {
             v_left  = v_left  / v_avg * v_desired;
             v_right = v_right / v_avg * v_desired;
         }
         // ROS_INFO("Dist: %f, ttogo: %f, yaw: %f; %f", dist, timeToGo.toSec(), yaw, relAngle);
-        ROS_INFO("vavg: %f, vd: %f, vl: %f, vr: %f", v_avg, v_desired, v_left, v_right);
+        // ROS_INFO("vavg: %f, vd: %f, vl: %f, vr: %f", v_avg, v_desired, v_left, v_right);
 
         geometry_msgs::Twist msg;
         msg.linear.x = v_left;
