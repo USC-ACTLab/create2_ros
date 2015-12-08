@@ -57,6 +57,7 @@ public:
   ~Create2ROS()
   {
     std::cout << "destruct createROS" << std::endl;
+    digitsLedsAscii("    ");
     // power();
   }
 
@@ -160,6 +161,11 @@ public:
 
     //publish the message
     odomPub_.publish(odom);
+
+    // update display
+    char buf[4] = {' ', ' ', ' ', ' '};
+    std::snprintf(buf, 4, "%d", (int)(state.batteryChargeInMAH / (float)state.batteryCapacityInMAH * 100.0));
+    digitsLedsAscii(buf);
 
     lastTime = currentTime;
 

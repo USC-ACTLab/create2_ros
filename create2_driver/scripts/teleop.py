@@ -12,7 +12,7 @@ class Controller():
 
     def _joyChanged(self, data):
         self.lastData = data
-        print(data)
+        # print(data)
 
     def run(self):
         while not rospy.is_shutdown():

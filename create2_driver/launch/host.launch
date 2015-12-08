@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<launch>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find create2_driver)/launch/rviz.rviz" required="true" />
+
+<!--   <include file="$(find create2_driver)/launch/teleop_ps3.launch">
+  </include> -->
+</launch>
