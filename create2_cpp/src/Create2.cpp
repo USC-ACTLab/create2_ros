@@ -154,8 +154,8 @@ Create2::Create2(
 
 Create2::~Create2()
 {
-  // stop();
-  power();
+  stop();
+  // power();
   delete impl_;
 }
 

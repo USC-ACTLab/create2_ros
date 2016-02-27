@@ -9,6 +9,7 @@ find_package(catkin REQUIRED
 	std_msgs
 	message_generation
 	tf
+  control_toolbox
 )
 
 ## System dependencies are found with CMake's conventions
