@@ -115,6 +115,12 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 
+## Additional include folders
+include_directories(
+  include
+  ${roscpp_INCLUDE_DIRS}
+)
+
 ## Declare a C++ library
 # add_library(mapf_controller
 #   src/${PROJECT_NAME}/mapf_controller.cpp

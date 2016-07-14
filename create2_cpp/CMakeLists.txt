@@ -33,6 +33,7 @@ catkin_package(
 include_directories(
   include
   include/create2_cpp
+  ${serial_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library

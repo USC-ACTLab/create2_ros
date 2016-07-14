@@ -12,14 +12,16 @@ class Controller():
 
     def _joyChanged(self, data):
         self.lastData = data
-        # print(data)
+        #print(self.lastData.axes[1])
 
     def run(self):
         while not rospy.is_shutdown():
             msg = Twist()
             if self.lastData != None:
-                msg.linear.x = self.lastData.axes[1] * 0.5
-                msg.linear.y = self.lastData.axes[3] * 0.5
+		speed = self.lastData.axes[1] * 0.4
+		angle = self.lastData.axes[2] * 0.3
+                msg.linear.x = speed - angle
+                msg.linear.y = speed + angle
             self.pubNav.publish(msg)
 
             rospy.sleep(0.01)
