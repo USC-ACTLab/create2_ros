@@ -363,6 +363,7 @@ void Create2::update()
 
         // delete portion of buffer
         impl_->readBuffer_.erase(impl_->readBuffer_.begin(), impl_->readBuffer_.begin() + size + i);
+        i = 0; // start from the beginning
       }
     }
   }

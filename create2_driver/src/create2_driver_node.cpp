@@ -73,10 +73,15 @@ public:
     static ros::Time lastTime = ros::Time::now();
 
     ros::Time currentTime = ros::Time::now();
-    double dt = (currentTime - lastTime).toSec();
+
+    // double dt = (currentTime - lastTime).toSec();
+    double dt = 0.015; // in streaming mode this should be constant; avoid measuring since that causes errors introduced by
+    // communication delays etc.
     double lastX = x_;
     double lastY = y_;
     double lastTheta = theta_;
+    double velocity; // translational
+    double angularVelocity;
 
     std::cout << "Mode: " << state.mode << std::endl;
     std::cout << "V: " << state.voltageInMV << " mV" << std::endl;
@@ -124,6 +129,9 @@ public:
         theta_ += 2 * M_PI;
       }
 
+      velocity = dt > 0 ? ((Dc / 1000.0) / dt) : 0.0;
+      angularVelocity = dt > 0 ? ((Dr - Dl) / WheelDistanceInMM / dt) : 0.0;
+      std::cout << "dt: " << dt << " vel: " << velocity << " angVel: " << angularVelocity << std::endl;
     }
 
     previousLeftEncoderCount_ = state.leftEncoderCounts;
@@ -157,7 +165,8 @@ public:
     odom.child_frame_id = "base_link";
     odom.twist.twist.linear.x = dt > 0 ? (x_ - lastX)/dt : 0.0;
     odom.twist.twist.linear.y = dt > 0 ? (y_ - lastY)/dt : 0.0;
-    odom.twist.twist.angular.z = dt > 0 ? atan2(sin(theta_ - lastTheta), cos(theta_ - lastTheta))/dt : 0.0;
+    odom.twist.twist.linear.z = velocity; // hack...; Maybe add another message just for velocities?
+    odom.twist.twist.angular.z = angularVelocity;
 
     //publish the message
     odomPub_.publish(odom);
@@ -217,14 +226,13 @@ int main(int argc, char **argv)
 
   g_create2 = new Create2ROS(port, brcPin, useBrcPin);
 
-  ros::Rate loop_rate(10);
   while (ros::ok())
   {
 
     g_create2->update();
 
     ros::spinOnce();
-    loop_rate.sleep();
+    ros::Duration(0.001).sleep(); // 1ms
   }
 
   return 0;
