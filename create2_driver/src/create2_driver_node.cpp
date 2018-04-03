@@ -82,7 +82,7 @@ public:
     double lastTheta = theta_;
     double velocity; // translational
     double angularVelocity;
-
+#if 0
     std::cout << "Mode: " << state.mode << std::endl;
     std::cout << "V: " << state.voltageInMV << " mV" << std::endl;
     std::cout << "Current: " << state.currentInMA << " mA" << std::endl;
@@ -95,13 +95,13 @@ public:
     std::cout << "CliffRight: " << state.cliffRightSignalStrength << std::endl;
     std::cout << "LeftEncoder: " << state.leftEncoderCounts << std::endl;
     std::cout << "RightEncoder: " << state.rightEncoderCounts << std::endl;
-
+#endif
     if (hasPreviousCounts_)
     {
       int32_t dtl = state.leftEncoderCounts - previousLeftEncoderCount_;
       int32_t dtr = state.rightEncoderCounts - previousRightEncoderCount_;
 
-      std::cout << "dtl: " << dtl << " dtr: " << dtr << std::endl;
+      // std::cout << "dtl: " << dtl << " dtr: " << dtr << std::endl;
 
       if (dtl < -30000) {
         dtl += 65535;
@@ -120,7 +120,7 @@ public:
       double Dr = M_PI * WheelDiameterInMM * dtr / CountsPerRev;
       double Dc = (Dl + Dr) / 2.0;
 
-      std::cout << "Dl: " << Dl << " Dr: " << Dr << " Dc: " << Dc << std::endl;
+      // std::cout << "Dl: " << Dl << " Dr: " << Dr << " Dc: " << Dc << std::endl;
 
       x_ += Dc * cos(theta_) / 1000.0;
       y_ += Dc * sin(theta_) / 1000.0;
@@ -131,14 +131,14 @@ public:
 
       velocity = dt > 0 ? ((Dc / 1000.0) / dt) : 0.0;
       angularVelocity = dt > 0 ? ((Dr - Dl) / WheelDistanceInMM / dt) : 0.0;
-      std::cout << "dt: " << dt << " vel: " << velocity << " angVel: " << angularVelocity << std::endl;
+      // std::cout << "dt: " << dt << " vel: " << velocity << " angVel: " << angularVelocity << std::endl;
     }
 
     previousLeftEncoderCount_ = state.leftEncoderCounts;
     previousRightEncoderCount_ = state.rightEncoderCounts;
     hasPreviousCounts_ = true;
 
-    std::cout << "State: (" << x_ << ", " << y_ << ", " << theta_ << ")" << std::endl;
+    // std::cout << "State: (" << x_ << ", " << y_ << ", " << theta_ << ")" << std::endl;
 
     // send tf
     tf::Transform transform;

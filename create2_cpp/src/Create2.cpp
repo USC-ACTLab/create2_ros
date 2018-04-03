@@ -249,7 +249,7 @@ void Create2::update()
         uint32_t sum = 0;
         for (size_t j = i; j <= size + i + 2; ++j) {
           sum += impl_->readBuffer_[j];
-          std::cout << (int)impl_->readBuffer_[j] << " ";
+          // std::cout << (int)impl_->readBuffer_[j] << " ";
         }
 
         if ((sum & 0xFF) == 0) {

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<launch>
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen" ns="create1">
+    <param name="dev" value="/dev/input/js0" />
+  </node>
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen" ns="create2">
+    <param name="dev" value="/dev/input/js1" />
+  </node>
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen" ns="create3">
+    <param name="dev" value="/dev/input/js2" />
+  </node>
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen" ns="create4">
+    <param name="dev" value="/dev/input/js3" />
+  </node>
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen" ns="create5">
+    <param name="dev" value="/dev/input/js4" />
+  </node>
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen" ns="create6">
+    <param name="dev" value="/dev/input/js5" />
+  </node>
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen" ns="create7">
+    <param name="dev" value="/dev/input/js6" />
+  </node>
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen" ns="create8">
+    <param name="dev" value="/dev/input/js7" />
+  </node>
+
+</launch>

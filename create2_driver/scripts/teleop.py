@@ -18,8 +18,8 @@ class Controller():
         while not rospy.is_shutdown():
             msg = Twist()
             if self.lastData != None:
-		speed = self.lastData.axes[1] * 0.4
-		angle = self.lastData.axes[2] * 0.3
+                speed = self.lastData.axes[1] * 0.4
+                angle = self.lastData.axes[3] * 0.3
                 msg.linear.x = speed - angle
                 msg.linear.y = speed + angle
             self.pubNav.publish(msg)

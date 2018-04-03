@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="port" default="/dev/ttySAC0" />
+
+  <node name="driver" pkg="create2_driver" type="create2_driver_node" output="screen">
+    <param name="port" value="$(arg port)" />
+    <param name="brcPin" value="26" />
+    <param name="useBrcPin" value="true" />
+  </node>
+
+  <node name="teleop" pkg="create2_driver" type="teleop.py" output="screen">
+  </node>
+</launch>
