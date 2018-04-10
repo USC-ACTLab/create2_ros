@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 
 <launch>
-  <arg name="port" default="/dev/ttySAC0" />
+  <arg name="port" default="/dev/ttyS2" />
 
   <node name="driver" pkg="create2_driver" type="create2_driver_node" output="screen">
     <param name="port" value="$(arg port)" />
-    <param name="brcPin" value="26" />
+    <param name="brcPin" value="87" />
     <param name="useBrcPin" value="true" />
   </node>
 
