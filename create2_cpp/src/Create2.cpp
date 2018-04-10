@@ -62,6 +62,8 @@ public:
         gpioValue << 0 << std::flush;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         gpioValue << 1 << std::flush;
+      } else {
+        std::cerr << "Couldn't find gpio export" << std::endl;
       }
     }
   }

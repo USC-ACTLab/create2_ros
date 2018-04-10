@@ -28,7 +28,8 @@ public:
   {
     ros::NodeHandle n;
     start();
-    safe();
+    // safe();
+    full();
 
     startStream({
       Create2::SensorOIMode,
@@ -71,6 +72,7 @@ public:
     const State& state)
   {
     static ros::Time lastTime = ros::Time::now();
+    static ros::Time lastBatteryInfo = ros::Time(0);
 
     ros::Time currentTime = ros::Time::now();
 
@@ -173,8 +175,16 @@ public:
 
     // update display
     char buf[4] = {' ', ' ', ' ', ' '};
-    std::snprintf(buf, 4, "%d", (int)(state.batteryChargeInMAH / (float)state.batteryCapacityInMAH * 100.0));
+    float batState = (state.batteryChargeInMAH / (float)state.batteryCapacityInMAH * 100.0);
+    std::snprintf(buf, 4, "%d", (int)batState);
     digitsLedsAscii(buf);
+
+    if ((currentTime - lastBatteryInfo).toSec() > 30) {
+      ROS_INFO("Battery: %f percent", batState);
+
+      lastBatteryInfo = currentTime;
+    }
+
 
     lastTime = currentTime;
 
