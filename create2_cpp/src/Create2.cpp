@@ -360,7 +360,7 @@ void Create2::update()
           }
           onUpdate(state);
         } else {
-          std::cout << "checksum incorrect!" << sum << std::endl;
+          // std::cout << "checksum incorrect!" << sum << std::endl;
         }
 
         // delete portion of buffer
