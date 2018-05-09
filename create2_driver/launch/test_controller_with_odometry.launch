@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<launch>
+  <arg name="port" default="/dev/ttySAC0" />
+
+  <node name="driver" pkg="create2_driver" type="create2_driver_node" output="screen">
+    <param name="port" value="$(arg port)" />
+    <param name="brcPin" value="24" />
+    <param name="useBrcPin" value="true" />
+  </node>
+
+  <node name="controller" pkg="create2_controller" type="create2_controller_node" output="screen">
+    <param name="frame" value="base_link" />
+    <param name="parentFrame" value="odom" />
+    <param name="use_arrival_time" value="false" />
+    <param name="goal_max_distance" value="0.05" />
+    <param name="frequency" value="10.0" />
+  </node>
+
+</launch>

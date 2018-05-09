@@ -11,12 +11,17 @@ public:
 
     Controller(
         const std::string& frame,
-        const std::string& parentFrame)
+        const std::string& parentFrame,
+        bool useArrivalTime,
+        double goalMaxDistance)
         : m_frame(frame)
         , m_parentFrame(parentFrame)
+        , m_useArrivalTime(useArrivalTime)
+        , m_goalMaxDistance(goalMaxDistance)
         , m_pubNav()
         , m_listener()
         , m_goal()
+        , m_hasGoal(false)
         , m_subscribeGoal()
         , m_pidTheta()
         , m_pidVelocity()
@@ -44,6 +49,7 @@ private:
         const create2_controller::Goal::ConstPtr& msg)
     {
         m_goal = *msg;
+        m_hasGoal = true;
         // TODO: HACK HACK
         // m_goal.arrival = ros::Time::now() + ros::Duration(10.0);
     }
@@ -59,7 +65,9 @@ private:
     void iteration(const ros::TimerEvent& e)
     {
 
-        if (m_goal.arrival == ros::Time(0)) {
+        if ((    m_useArrivalTime
+              && m_goal.arrival == ros::Time(0))
+            || !m_hasGoal) {
             // We didn't start yet or we are done.
             geometry_msgs::Twist msg;
             m_pubNav.publish(msg);
@@ -92,13 +100,25 @@ private:
         double targetAngle = atan2(goalY - posY, goalX - posX);
         double errorTheta = atan2(sin(targetAngle - posYaw), cos(targetAngle - posYaw));
 
-        ros::Duration timeToGo = m_goal.arrival - ros::Time::now();
-        double targetVelocity = std::max(dist / timeToGo.toSec(), 0.0);
-        double velocity = sqrt(pow(posX - m_lastPosX, 2) + pow(posY - m_lastPosY, 2)) / dt;
+        double outputVelocity;
+        if (m_useArrivalTime) {
+            ros::Duration timeToGo = m_goal.arrival - ros::Time::now();
+            double targetVelocity = std::max(dist / timeToGo.toSec(), 0.0);
+            double velocity = sqrt(pow(posX - m_lastPosX, 2) + pow(posY - m_lastPosY, 2)) / dt;
 
-        double errorVelocity = targetVelocity - velocity;
+            double errorVelocity = targetVelocity - velocity;
 
-        double outputVelocity = clamp(targetVelocity+m_pidVelocity.computeCommand(errorVelocity, dtRos), 0, 0.5);//clamp(m_pidVelocity.updatePid(errorVelocity, dtRos), 0, 0.5);
+            outputVelocity = clamp(targetVelocity+m_pidVelocity.computeCommand(errorVelocity, dtRos), 0, 0.5);//clamp(m_pidVelocity.updatePid(errorVelocity, dtRos), 0, 0.5);
+        } else {
+            if (dist < m_goalMaxDistance) {
+                // we are actually close enough to the goal
+                geometry_msgs::Twist msg;
+                m_pubNav.publish(msg);
+                return;
+            }
+            outputVelocity = clamp(m_pidVelocity.computeCommand(dist, dtRos), 0, 0.5);
+        }
+
         double outputTheta = clamp(m_pidTheta.computeCommand(errorTheta, dtRos), -0.2, 0.2);
         // if (outputVelocity < 0.01) {
         //     outputTheta = 0;
@@ -111,7 +131,7 @@ private:
         msg.linear.y = clamp(outputVelocity + outputTheta, -0.5, 0.5);
 
         // ROS_INFO("Vel: is: %f, target: %f output: %f", velocity, targetVelocity, outputVelocity);
-        ROS_INFO("dist: %f, %f; %f, %f", dist, targetVelocity, velocity, outputVelocity);
+        // ROS_INFO("dist: %f, %f; %f, %f", dist, targetVelocity, velocity, outputVelocity);
         // ROS_INFO("Vel: %f, %f", msg.linear.x, msg.linear.y);
         //msg.linear.x = (v_left + v_right) / 2.0;
         //msg.angular.x = -v_left + msg.linear.x;
@@ -129,9 +149,12 @@ private:
 private:
     std::string m_frame;
     std::string m_parentFrame;
+    bool m_useArrivalTime;
+    double m_goalMaxDistance;
     ros::Publisher m_pubNav;
     tf::TransformListener m_listener;
     create2_controller::Goal m_goal;
+    bool m_hasGoal;
     ros::Subscriber m_subscribeGoal;
     control_toolbox::Pid m_pidTheta;
     control_toolbox::Pid m_pidVelocity;
@@ -146,11 +169,15 @@ int main(int argc, char **argv)
   ros::NodeHandle n("~");
   std::string frame;
   std::string parentFrame;
+  bool useArrivalTime;
+  double goalMaxDistance; // maximum distance in meters until a goal is considered "reached"
   n.getParam("frame", frame);
   n.param<std::string>("parentFrame", parentFrame, "/world");
-  std::cout << frame << std::endl;
+  n.param("use_arrival_time", useArrivalTime, false);
+  n.param("goal_max_distance", goalMaxDistance, 0.05);
 
-  Controller controller(frame, parentFrame);
+
+  Controller controller(frame, parentFrame, useArrivalTime, goalMaxDistance);
 
   double frequency;
   n.param("frequency", frequency, 10.0);
