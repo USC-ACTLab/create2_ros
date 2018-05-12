@@ -49,6 +49,8 @@ find_package(catkin REQUIRED
 add_message_files(
   FILES
   Goal.msg
+  Vector2D.msg
+  TrajectoryState2D.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -131,15 +133,17 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 # add_dependencies(mapf_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-# Declare a C++ executable
+# GoTo controller
 add_executable(create2_controller_node src/create2_controller_node.cpp)
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-# add_dependencies(mapf_controller_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-# Specify libraries to link a library or executable target against
+add_dependencies(create2_controller_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(create2_controller_node
+  ${catkin_LIBRARIES}
+)
+
+# trajectory controller
+add_executable(trajectory_controller src/trajectory_controller.cpp)
+add_dependencies(trajectory_controller ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(trajectory_controller
   ${catkin_LIBRARIES}
 )
 
