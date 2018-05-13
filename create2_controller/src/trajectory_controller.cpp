@@ -43,6 +43,7 @@ private:
     void onDesiredState(
         const create2_controller::TrajectoryState2D::ConstPtr& msg)
     {
+        m_lastCmd = ros::Time::now();
         // We execute an update step each time a new desired state arrives
 
         // Get current state
@@ -106,17 +107,36 @@ private:
         // convert w [rad/s] => w_v [m/s]
         const float WheelDistanceInMM = 235.0;
         const float u = M_PI * WheelDistanceInMM / 1000.0; // circumference in m (~0.74)
+        const float minWheelSpeed = -0.5; // m/s
+        const float maxWheelSpeed = 0.5;  // m/s
 
         float w_v = w / (2 * M_PI) * u;
 
-        if (v-w_v < -0.5 || v-w_v > 0.5 || v + w_v < -0.5 || v + w_v > 0.5) {
-            ROS_WARN("Output Satuation!");
+        float leftVel = v - w_v;
+        float rightVel = v + w_v;
+
+        float scalingFactor = 1.0;
+        if (leftVel < minWheelSpeed) {
+            scalingFactor = std::min(scalingFactor, minWheelSpeed / leftVel);
+        }
+        if (leftVel > maxWheelSpeed) {
+            scalingFactor = std::min(scalingFactor, maxWheelSpeed / leftVel);
+        }
+        if (rightVel < minWheelSpeed) {
+            scalingFactor = std::min(scalingFactor, minWheelSpeed / rightVel);
+        }
+        if (rightVel > maxWheelSpeed) {
+            scalingFactor = std::min(scalingFactor, maxWheelSpeed / rightVel);
+        }
+
+        if (scalingFactor < 1.0) {
+            ROS_WARN("Output Satuation! (left: %f, right: %f, v: %f, w: %f) scaling: %f", v - w_v, v + w_v, v, w, scalingFactor);
         }
 
 
         geometry_msgs::Twist msg_cmd_vel;
-        msg_cmd_vel.linear.x = clamp(v - w_v, -0.5, 0.5);
-        msg_cmd_vel.linear.y = clamp(v + w_v, -0.5, 0.5);
+        msg_cmd_vel.linear.x = scalingFactor * leftVel; //clamp(v - w_v, -0.5, 0.5);
+        msg_cmd_vel.linear.y = scalingFactor * rightVel; //clamp(v + w_v, -0.5, 0.5);
         m_pubCmdVel.publish(msg_cmd_vel);
     }
 
@@ -127,7 +147,13 @@ private:
 
     void onWatchdog(const ros::TimerEvent& e)
     {
-
+        ros::Time now = ros::Time::now();
+        ros::Duration duration = now - m_lastCmd;
+        if (duration.toSec() > 1 && duration.toSec() < 2) {
+            ROS_WARN("Timeout! Turning of motors...");
+            geometry_msgs::Twist msg_cmd_vel;
+            m_pubCmdVel.publish(msg_cmd_vel);
+        }
     }
 
 private:
@@ -145,6 +171,7 @@ private:
     float m_Ktheta;
 
     ros::Timer m_timer;
+    ros::Time m_lastCmd;
 };
 
 int main(int argc, char **argv)
