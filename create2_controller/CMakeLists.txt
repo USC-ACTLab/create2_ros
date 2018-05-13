@@ -14,7 +14,7 @@ find_package(catkin REQUIRED
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(Eigen3 REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -103,10 +103,10 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS ${EIGEN3_INCLUDE_DIRS}
 #  LIBRARIES mapf_controller
   CATKIN_DEPENDS message_runtime
-#  DEPENDS system_lib
+#  DEPENDS Eigen3
 )
 
 ###########
@@ -120,7 +120,8 @@ catkin_package(
 ## Additional include folders
 include_directories(
   include
-  ${roscpp_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
