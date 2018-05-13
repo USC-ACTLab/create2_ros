@@ -32,6 +32,8 @@ public:
         m_pubCmdVel = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
         m_subDesiredState = nh.subscribe("desired_state", 1, &Controller::onDesiredState, this);
 
+        m_timer = nh.createTimer(ros::Duration(1.0), &Controller::onWatchdog, this);
+
         // for debugging/tuning
         m_pubPoseCurrent = nh.advertise<geometry_msgs::Pose2D>("pose_current", 1);
         m_pubPoseDesired = nh.advertise<geometry_msgs::Pose2D>("pose_desired", 1);
@@ -99,12 +101,17 @@ private:
         float w = w_r + v_r * (m_Ky * y_e + m_Ktheta * sin(theta_e));
 
         // apply control
+        // ROS_INFO("v: %f, w: %f", v, w);
 
         // convert w [rad/s] => w_v [m/s]
         const float WheelDistanceInMM = 235.0;
         const float u = M_PI * WheelDistanceInMM / 1000.0; // circumference in m (~0.74)
 
         float w_v = w / (2 * M_PI) * u;
+
+        if (v-w_v < -0.5 || v-w_v > 0.5 || v + w_v < -0.5 || v + w_v > 0.5) {
+            ROS_WARN("Output Satuation!");
+        }
 
 
         geometry_msgs::Twist msg_cmd_vel;
@@ -116,6 +123,11 @@ private:
     double clamp(double value, double min, double max)
     {
         return std::min(std::max(value, min), max);
+    }
+
+    void onWatchdog(const ros::TimerEvent& e)
+    {
+
     }
 
 private:
@@ -131,6 +143,8 @@ private:
     float m_Kx;
     float m_Ky;
     float m_Ktheta;
+
+    ros::Timer m_timer;
 };
 
 int main(int argc, char **argv)
