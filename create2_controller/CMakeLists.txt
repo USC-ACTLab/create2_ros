@@ -148,6 +148,13 @@ target_link_libraries(trajectory_controller
   ${catkin_LIBRARIES}
 )
 
+
+add_executable(trajectory_controller_v2 src/trajectory_controller_v2.cpp)
+add_dependencies(trajectory_controller_v2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(trajectory_controller_v2
+		${catkin_LIBRARIES}
+		)
+
 #############
 ## Install ##
 #############
